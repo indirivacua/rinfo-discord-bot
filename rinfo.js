@@ -82,6 +82,17 @@ class RInfo{
           return
         }
 
+        // console.log(buffer, !isNaN(buffer))
+        if ((buffer !== "" && buffer !== " ") && !isNaN(buffer)){
+          tokens.push({
+            type: 'operand',
+            value: Number(buffer)
+          })
+          buffer = ""
+          keyword = ""
+          return
+        }
+
         if (this.VAR_ACCEPTED_CHARACTERS.includes(char)){
           keyword += char
           // console.log(keyword)
@@ -116,7 +127,7 @@ class RInfo{
   run(){
     const { tokens, error } = this.lexer()
     if (error) {
-      return console.error(error)
+      return console.error('\x1b[31m%s\x1b[0m', error)
     }
     this.parser(tokens)
     console.log(tokens)
