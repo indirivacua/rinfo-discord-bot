@@ -1,7 +1,13 @@
 /*
 * Grammar:
-*  <section name=variables>
-*     <keyword_custom> : <type>
+*  <section name='variables'>
+*    <keyword_custom> : <type>
+*  </section>
+*  <section name='comenzar'>
+*    <keyword_custom> <operator value=':='> <operands and operators>
+*    <keyword name='repetir'> <operand>
+*      <keywords>
+*  </section name='fin'>
 */
 
 
@@ -10,9 +16,9 @@ class RInfo{
     this.code = code
     this.VAR_ACCEPTED_CHARACTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
     this.BUILT_IN_SECTIONS = ['variables', 'comenzar', 'fin']
-    this.BUILT_IN_DATATYPES = ['numero']
+    this.BUILT_IN_DATATYPES = ['numero', 'booleano']
     this.BUILT_IN_KEYWORDS = ['repetir', 'mover', 'derecha']
-    this.BUILT_IN_OPERATORS = [':', '=']
+    this.BUILT_IN_OPERATORS = [':=', '+', '-']
   }
 
   lexer(){
@@ -34,12 +40,21 @@ class RInfo{
           ident_level = 0
         }
 
+        if (buffer === ": ") {
+          tokens.push({
+            type: 'declaration',
+            value: buffer[0]
+          })
+        }
+
         if ((char === " " || char === "\n") && keyword.length === 0){
           buffer = ""
           keyword = ""
           return
         }
         buffer = (char === " ") ? "" : buffer
+
+        // console.log(buffer)
 
         if (this.BUILT_IN_SECTIONS.includes(buffer)){
           tokens.push({
@@ -105,6 +120,8 @@ class RInfo{
           })
           keyword = ""
           return
+        } else if (buffer === ":") {
+          return
         } else {
           var BreakException = {
             error: `Unexpected character ${char} at line ${line} column ${column}`
@@ -138,11 +155,13 @@ class RInfo{
 const code =
 `variables
   veces : numero
+  b : booleano
 comenzar
   veces := 5
+  foo := veces + 3 - 1
   repetir 3
     mover
-  repetir veces
+  repetir foo
     mover
     derecha
   derecha
