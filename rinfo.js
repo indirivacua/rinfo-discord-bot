@@ -39,6 +39,7 @@ class RInfo{
           keyword = ""
           return
         }
+        buffer = (char === " ") ? "" : buffer
 
         if (this.BUILT_IN_SECTIONS.includes(buffer)){
           tokens.push({
