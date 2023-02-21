@@ -12,7 +12,7 @@ class RInfo{
     this.BUILT_IN_SECTIONS = ['variables', 'comenzar', 'fin']
     this.BUILT_IN_DATATYPES = ['numero']
     this.BUILT_IN_KEYWORDS = ['repetir', 'mover', 'derecha']
-    this.BUILT_IN_OPERATORS = [':=']
+    this.BUILT_IN_OPERATORS = [':', '=']
   }
 
   lexer(){
@@ -27,7 +27,7 @@ class RInfo{
         buffer += char
 
         line += char === "\n"
-        column++
+        column = (char === "\n") ? 0 : column + 1
         if (char === " "){
           ident_level++
         } else if (char === "\n"){
@@ -93,6 +93,7 @@ class RInfo{
           return
         }
 
+        // console.log(buffer)
         if (this.VAR_ACCEPTED_CHARACTERS.includes(char)){
           keyword += char
           // console.log(keyword)
@@ -104,12 +105,12 @@ class RInfo{
           })
           keyword = ""
           return
-        } /*else {
+        } else {
           var BreakException = {
-            error: `Unexpected character at line ${line} column ${column}`
+            error: `Unexpected character ${char} at line ${line} column ${column}`
           }
           throw BreakException
-        }*/
+        }
       });
     } catch (e) {
       return e
@@ -136,7 +137,7 @@ class RInfo{
 
 const code =
 `variables
-  veces: numero
+  veces : numero
 comenzar
   veces := 5
   repetir 3
