@@ -211,10 +211,13 @@ class RInfo{
                   //expression result contains variables
                   if (e instanceof ReferenceError) {
                     const extractWords = str => str.match(/[a-zA-Z]+/g);
-                    const varNamesInExpression = extractWords(result)
+                    let varNamesInExpression = extractWords(result)
+                    varNamesInExpression = [...new Set(varNamesInExpression)]; //remove repeted elements
+                    // console.log(varNamesInExpression)
                     varNamesInExpression.forEach((varName) => {
                       //FIXME if an expression its like `veces+veces` will return `vars['vars['veces']']+veces`
-                      result = result.replace(varName, `vars['${varName}']`)
+                      //   POSSIBLE SOLUTION: MAKE A SET OF VARNAMEINEXPRESSION AND REPLACE ALL OCURRENCE IN RESULT
+                      result = result.replaceAll(varName, `vars['${varName}']`)
                     })
                     // console.log(result)
                     vars[varName] = eval(result)
@@ -266,7 +269,7 @@ const code =
 comenzar
   times := 9
   veces := 5
-  foo := veces + 3 - 1 + times
+  foo := veces + 3 - 1 + times + veces
   times := veces + 1 + times + foo + 5
   repetir 3
     mover
