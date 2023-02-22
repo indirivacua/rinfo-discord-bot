@@ -177,6 +177,66 @@ class RInfo{
         } while (tokens[index+1].type !== "section" && tokens[index+1].value !== "comenzar")
         index++
       }
+      //look for code section
+      if (tokens[index].type === "section" && tokens[index].value === "comenzar") {
+        let current_ident_level = 2
+        do {
+          //look for variables operations
+          //FIXME only works with numerical operations
+          //if exist and is a variable name and
+          //TODO check for ident level
+          if (tokens[index+1] && tokens[index+1].type === "keyword_custom"){
+            const varName = tokens[index+1].value
+            //if var was defined in previous section
+            if (varName in vars){
+              //if it is an assigment of the variable
+              if (tokens[index+2] && tokens[index+2].type === "operator" && tokens[index+2].value === ":="){
+                let result = ""
+                index += 2 //keyword_custom + operator
+                do {
+                  if (tokens[index+1]) {
+                    result += tokens[index+1].value
+                  }
+                  // console.log(tokens[index+1].value, result, varName)
+                  index++
+                //until no more operands lefts
+                //FIXME doesnt work with an variable declaration like `veces := veces + 5 + veces`
+                } while (tokens[index+1].ident_level === undefined)
+                // console.log(tokens[index+1])
+                try {
+                  vars[varName] = eval(result)
+                } catch (e) {
+                  //expression result contains variables
+                  if (e instanceof ReferenceError) {
+                    const extractWords = str => str.match(/[a-zA-Z]+/g);
+                    const varNamesInExpression = extractWords(result)
+                    varNamesInExpression.forEach((varName) => {
+                      //BUG probably if an expression its like `veces+veces` will return `vars['vars['veces']']+veces['vars['veces']']`
+                      result = result.replace(varName, `vars['${varName}']`)
+                    })
+                    // console.log(result)
+                    vars[varName] = eval(result)
+                  } else if (e instanceof SyntaxError) {
+                    console.log(e)
+                    return console.log(`Expression ${result} contains syntax errors`)
+                  }
+                }
+              } else if (tokens[index+2]) { //this case probably is useful for `repetir varName`
+                index++
+              } /*else {
+                return console.log(`Unexpected value ${tokens[index+1].value}, expected :=`)
+              }*/
+            } else {
+              return console.log(`Variable ${varName} is undefined`)
+            }
+          } else { //line wasnt a variable
+            index++
+          }
+          //look for repetir
+          //look for normal instructions (e.g: mover, derecha)
+          // console.log(tokens[index], tokens[index+1])
+        } while (tokens[index+1].type !== "section" && tokens[index+1].value !== "fin")
+      }
       index++ //DEBUG
     }
     console.log(vars)
@@ -187,8 +247,8 @@ class RInfo{
     if (error) {
       return console.error('\x1b[31m%s\x1b[0m', error)
     }
-    this.parser(tokens)
     console.log(tokens)
+    this.parser(tokens)
   }
 }
 
@@ -196,6 +256,7 @@ const code =
 `variables
   veces : numero
   b : booleano
+  foo : numero
 comenzar
   veces := 5
   foo := veces + 3 - 1
