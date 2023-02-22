@@ -200,9 +200,11 @@ class RInfo{
                   // console.log(tokens[index+1].value, result, varName)
                   index++
                 //until no more operands lefts
-                //FIXME doesnt work with an variable declaration like `veces := veces + 5 + veces`
-                } while (tokens[index+1].ident_level === undefined)
-                // console.log(tokens[index+1])
+                } while ((tokens[index+1] && tokens[index+1].value !== "fin" && tokens[index+1].ident_level === undefined)
+                //|| (tokens[index+1].type === "keyword_custom" && tokens[index+1].ident_level === 0) //case varName+imm+varName2
+                || (tokens[index+1].type === "keyword_custom" && tokens[index].type === "operator"))  //case varName1+varName2
+                // console.log(tokens[index+1], result)
+                //assign the value extracted from the result expression to the variable
                 try {
                   vars[varName] = eval(result)
                 } catch (e) {
@@ -211,14 +213,17 @@ class RInfo{
                     const extractWords = str => str.match(/[a-zA-Z]+/g);
                     const varNamesInExpression = extractWords(result)
                     varNamesInExpression.forEach((varName) => {
-                      //BUG probably if an expression its like `veces+veces` will return `vars['vars['veces']']+veces['vars['veces']']`
+                      //FIXME if an expression its like `veces+veces` will return `vars['vars['veces']']+veces`
                       result = result.replace(varName, `vars['${varName}']`)
                     })
                     // console.log(result)
                     vars[varName] = eval(result)
+                    if (isNaN(vars[varName])) {
+                      return console.log(`Expression ${result} contains syntax errors`) //case some var not declared in result expression
+                    }
                   } else if (e instanceof SyntaxError) {
-                    console.log(e)
-                    return console.log(`Expression ${result} contains syntax errors`)
+                    // console.log(e)
+                    return console.log(`Expression ${result} contains syntax errors`)   //case something like this `5 ++ 7` in result expression
                   }
                 }
               } else if (tokens[index+2]) { //this case probably is useful for `repetir varName`
@@ -257,18 +262,25 @@ const code =
   veces : numero
   b : booleano
   foo : numero
+  times : numero
 comenzar
+  times := 9
   veces := 5
-  foo := veces + 3 - 1
+  foo := veces + 3 - 1 + times
+  times := veces + 1 + times + foo + 5
   repetir 3
     mover
   repetir foo
     mover
     derecha
+    times := times + 3
   derecha
+  foo := foo + 1
 fin`
 const rinfo = new RInfo(code)
 rinfo.run()
+
+//BUG if penultimate line of code is something like this `foo := foo + foo`, `fin` line doesnt get stored
 
 // TODO
 // si HFELE
