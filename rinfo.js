@@ -139,7 +139,47 @@ class RInfo{
   }
 
 
-  parser(){
+  parser(tokens){
+    const len = tokens.length
+    let index = 0
+    const vars = {}
+    if (tokens[len-1].type !== "section" && tokens[len-1].value !== "fin"){
+      return console.log("Unexpected end of program, expected fin")
+    }
+    while(index < len){
+      //look for variables section
+      if (tokens[index].type === "section" && tokens[index].value === "variables") {
+        //save variable names and types
+        do {
+          if (!tokens[index+1]) {
+            return console.log("Unexpected end of line, expected variable name")
+          } else if (tokens[index + 1].type !== "keyword_custom") {
+            return console.log(`Unexpected token ${tokens[index + 1].value}, expected variable name`)
+          } else if (tokens[index + 1].ident_level !== 2) {
+            return console.log("Unexpected identation level")
+          }
+          if (!tokens[index+2]) {
+            return console.log("Unexpected end of line, expected variable name")
+          } else if (tokens[index + 2].type !== "declaration") {
+            return console.log(`Unexpected token ${tokens[index + 2].value}, expected :`)
+          }
+          if (!tokens[index+3]) {
+            return console.log("Unexpected end of line, expected variable name")
+          } else if (tokens[index + 3].type !== "datatype") {
+            return console.log(`Unexpected token ${tokens[index + 3].value}, expected datatype`)
+          }
+          //if reached this part, all goes ok
+          const varName = tokens[index+1].value
+          //random initial value
+          vars[varName] = (tokens[index + 3].value === "numero") ? Math.floor(Math.random() * 100) : true
+
+          index += 3 //keyword_custom + declaration + datatype
+        } while (tokens[index+1].type !== "section" && tokens[index+1].value !== "comenzar")
+        index++
+      }
+      index++ //DEBUG
+    }
+    console.log(vars)
   }
 
   run(){
