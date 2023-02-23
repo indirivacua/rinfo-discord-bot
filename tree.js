@@ -157,24 +157,33 @@ class ExpressionTree{
     while (index < length) {
       char = expression_postfija[index]
       if (OPERATORS.includes(char)){
-        r = new Node()
-        r.setData(char)
+        r = new Tree()
+        r.insert(char)
         hRight = this.stack.pop()
         hLeft = this.stack.pop()
-        r.setBranchesCustom(hLeft, hRight)
+        r.root.setBranchesCustom(hLeft, hRight)
         this.stack.push(r)
       } else { // es un operando
-        n = new Node()
-        n.setData(char)
+        n = new Tree()
+        n.insert(char)
         this.stack.push(n)
       }
       index++
     }
   }
   getStack(){
-    return this.stack
+    return this.stack[0]
+  }
+  inOrder(node){
+    if (node){
+      this.getStack().getLeft().inOrder()
+      console.log(this.root.getData())
+      this.getStack().getRight().inOrder()
+    }
   }
 }
 
 et = new ExpressionTree(expression_postfija)
 console.log(et)
+console.log(et.getStack())
+et.getStack().inOrder()
