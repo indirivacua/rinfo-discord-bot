@@ -33,18 +33,18 @@ class Tree{
   isEmpty(){
     return (this.root.getData()) ? false : true
   }
-  insert(data, branch=null){
+  insert(data){
     if (this.isEmpty()){
       this.root.setData(data)
       this.root.setBranches()
     } else {
       if (data < this.root.getData()) {
-        let node_left = this.root.getLeft()
-        node_left.insert(data, branch)
+        const node_left = this.root.getLeft()
+        node_left.insert(data)
       } else {
         if (data > this.root.getData()) {
-          let node_right = this.root.getRight()
-          node_right.insert(data, branch)
+          const node_right = this.root.getRight()
+          node_right.insert(data)
         }
       }
     }
@@ -58,57 +58,53 @@ class Tree{
   }
 }
 
-a = new Tree();
-console.log(a.isEmpty())
-a.insert(5);
-a.insert(7);
-a.insert(2);
-a.insert(3);
-a.insert(6);
-a.inOrder();
+t = new Tree();
+console.log(t.isEmpty())
+t.insert(5);
+t.insert(7);
+t.insert(2);
+t.insert(3);
+t.insert(6);
+t.inOrder();
 
-function checkPriorty(PRIORITY, char, element){
-  let index = 0
-  let orderChar = 0
-  let oderElement = 0
-  let length = PRIORITY.length
-  // console.log(char, element)
-  while (index < length){
-    if (Array.isArray(PRIORITY[index])){
-      if (PRIORITY[index].includes(char)){
-        orderChar = index
+/////////////////////////////////////////////////////////////////////////////////////////
+
+// returns true if operador has higher priority than stack top
+function checkPriorty(char, element, PRIORITY){
+  let order_char = 0, oder_element = 0
+  for (let index = 0; index < PRIORITY.length; index++) {
+    const priority_element = PRIORITY[index];
+    if (Array.isArray(priority_element)){
+      if (priority_element.includes(char)){
+        order_char = index
       }
-      if (PRIORITY[index].includes(element)){
-        oderElement = index
+      if (priority_element.includes(element)){
+        oder_element = index
       }
     } else {
-      if (char ===PRIORITY[index])
-        orderChar = index
-      if (element ===PRIORITY[index])
-        oderElement = index
+      if (char === priority_element){
+        order_char = index
+      }
+      if (element === priority_element){
+        oder_element = index
+      }
     }
-    index++
   }
-  return (orderChar > oderElement)
+  return (order_char > oder_element)
 }
 
-function infija2postfija(expression) {
+function infix2postfix(expression, OPERATORS) {
   let stack = []
-  let index = 0
-  let length = expression.length
-  let OPERATORS = ['+','-','*','/']
-  let PRIORITY = ['^', ['*','/'], ['+','-']].reverse() //orden de menor a mayor
+  let PRIORITY = ['^', ['*','/'], ['+','-']].reverse() //lowest to highest priority
   let out = ''
-  let retorno = ""
-  // console.log(PRIORITY)
-  while (index < length) {
+  let result = ""
+  for (let index = 0; index < expression.length; index++) {
     const char = expression[index]
-    if (OPERATORS.includes(char)){
+    if (OPERATORS.includes(char)){ //its an operator
       if (stack.length !== 0){
-        while (stack[stack.length-1] && !checkPriorty(PRIORITY, char, stack[stack.length-1])){ //retorna true si operador tiene mayor prioridad al tope de la pila
-          // console.log(char, !checkPriorty(PRIORITY, char, stack[stack.length-1]), stack[stack.length-1])
+        while (stack[stack.length-1] && !checkPriorty(char, stack[stack.length-1], PRIORITY)){
           out = stack.pop()
-          retorno += out
+          result += out
           console.log(out)
         }
         stack.push(char)
@@ -119,71 +115,60 @@ function infija2postfija(expression) {
       stack.push(char)
     } else if (char === ")") {
       if (stack.length !== 0) {
-        while (stack[length-1] !== "("){
+        while (stack[stack.length-1] !== "("){
           out = stack.pop()
-          retorno += out
+          result += out
           console.log(out)
         }
         out = stack.pop()
-        retorno += out
+        result += out
         console.log(out)
       }
-    } else { //es un operando
+    } else { //its an operand
       out = char
-      retorno += out
+      result += out
       console.log(out)
     }
-    index++
   }
   stack.forEach((el) => {
     out = el
-    retorno += out
+    result += out
     console.log(out)
   })
-  return retorno
+  return result
 }
 
-expression_postfija = infija2postfija("2+5*3+1") //253*+1+
-console.log(expression_postfija)
+let OPERATORS = ['+','-','*','/']
+expression_postfix = infix2postfix("2+5*3+1", OPERATORS) //253*+1+
+console.log(expression_postfix)
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 class ExpressionTree{
-  constructor(expression_postfija){
-    let OPERATORS = ['+','-','*','/']
-    let index = 0
-    let char = ''
-    let length = expression_postfija.length
+  constructor(expression_postfix, OPERATORS){
     this.stack = []
-    let n, r, hRight, hLeft
-    while (index < length) {
-      char = expression_postfija[index]
+    for (let index = 0; index < expression_postfix.length; index++) {
+      const char = expression_postfix[index]
       if (OPERATORS.includes(char)){
-        r = new Tree()
+        const r = new Tree()
         r.insert(char)
-        hRight = this.stack.pop()
-        hLeft = this.stack.pop()
-        r.root.setBranchesCustom(hLeft, hRight)
+        const node_right = this.stack.pop()
+        const node_left = this.stack.pop()
+        r.root.setBranchesCustom(node_left, node_right)
         this.stack.push(r)
-      } else { // es un operando
-        n = new Tree()
+      } else { //its an operand
+        const n = new Tree()
         n.insert(char)
         this.stack.push(n)
       }
-      index++
     }
   }
-  getStack(){
+  getTree(){
     return this.stack[0]
-  }
-  inOrder(node){
-    if (node){
-      this.getStack().getLeft().inOrder()
-      console.log(this.root.getData())
-      this.getStack().getRight().inOrder()
-    }
   }
 }
 
-et = new ExpressionTree(expression_postfija)
+et = new ExpressionTree(expression_postfix, OPERATORS)
 console.log(et)
-console.log(et.getStack())
-et.getStack().inOrder()
+console.log(et.getTree())
+et.getTree().inOrder()
