@@ -54,7 +54,6 @@ class RInfo{
         }
         buffer = (char === " ") ? "" : buffer
 
-        // console.log(buffer)
 
         if (this.BUILT_IN_SECTIONS.includes(buffer)){
           tokens.push({
@@ -97,7 +96,6 @@ class RInfo{
           return
         }
 
-        // console.log(buffer, !isNaN(buffer))
         if ((buffer !== "" && buffer !== " ") && !isNaN(buffer)){
           tokens.push({
             type: 'operand',
@@ -108,10 +106,8 @@ class RInfo{
           return
         }
 
-        // console.log(buffer)
         if (this.VAR_ACCEPTED_CHARACTERS.includes(char)){
           keyword += char
-          // console.log(keyword)
         } else if (keyword !== "" && ((char === " " || char === "\n"))){
           tokens.push({
             type: 'keyword_custom',
@@ -183,7 +179,6 @@ class RInfo{
         do {
           //look for variables operations
           //FIXME only works with numerical operations
-          //if exist and is a variable name and
           //TODO check for ident level
           if (tokens[index+1] && tokens[index+1].type === "keyword_custom"){
             const varName = tokens[index+1].value
@@ -197,13 +192,11 @@ class RInfo{
                   if (tokens[index+1]) {
                     result += tokens[index+1].value
                   }
-                  // console.log(tokens[index+1].value, result, varName)
                   index++
                 //until no more operands lefts
                 } while ((tokens[index+1] && tokens[index+1].value !== "fin" && tokens[index+1].ident_level === undefined)
                 //|| (tokens[index+1].type === "keyword_custom" && tokens[index+1].ident_level === 0) //case varName+imm+varName2
-                || (tokens[index+1].type === "keyword_custom" && tokens[index].type === "operator"))  //case varName1+varName2
-                // console.log(tokens[index+1], result)
+                || (tokens[index+1].type === "keyword_custom" && tokens[index].type === "operator")) //case varName1+varName2
                 //assign the value extracted from the result expression to the variable
                 try {
                   vars[varName] = eval(result)
@@ -213,20 +206,15 @@ class RInfo{
                     const extractWords = str => str.match(/[a-zA-Z]+/g);
                     let varNamesInExpression = extractWords(result)
                     varNamesInExpression = [...new Set(varNamesInExpression)]; //remove repeted elements
-                    // console.log(varNamesInExpression)
                     varNamesInExpression.forEach((varName) => {
-                      //FIXME if an expression its like `veces+veces` will return `vars['vars['veces']']+veces`
-                      //   POSSIBLE SOLUTION: MAKE A SET OF VARNAMEINEXPRESSION AND REPLACE ALL OCURRENCE IN RESULT
                       result = result.replaceAll(varName, `vars['${varName}']`)
                     })
-                    // console.log(result)
                     vars[varName] = eval(result)
                     if (isNaN(vars[varName])) {
                       return console.log(`Expression ${result} contains syntax errors`) //case some var not declared in result expression
                     }
                   } else if (e instanceof SyntaxError) {
-                    // console.log(e)
-                    return console.log(`Expression ${result} contains syntax errors`)   //case something like this `5 ++ 7` in result expression
+                    return console.log(`Expression ${result} contains syntax errors`) //case something like this `5 ++ 7` in result expression
                   }
                 }
               } else if (tokens[index+2]) { //this case probably is useful for `repetir varName`
@@ -241,8 +229,37 @@ class RInfo{
             index++
           }
           //look for repetir
+          if (tokens[index+1] && tokens[index+1].type === "keyword" && tokens[index+1].value === "repetir"){
+            if (tokens[index+2] && (tokens[index+2].type === "operand" || tokens[index+2].type === "keyword_custom")){
+              let times_repeat
+              if (typeof tokens[index+2].value === "number"){
+                times_repeat = tokens[index+2].value
+              } else {
+                const varName = tokens[index+2].value
+                if (!vars.hasOwnProperty(varName)){
+                  return console.log(`Variable ${varName} is undefined`)
+                }
+                times_repeat = vars[varName]
+              }
+              const repetir_ident_level = tokens[index+1].ident_level
+              let inner_index, repetir_index
+              for (repetir_index = 0; repetir_index < times_repeat; repetir_index++) {
+                inner_index = index + 2 //keyword + operator
+                do {
+                  //TODO use recursion to process variables and inners repetir
+                  console.log(`${repetir_index}/${times_repeat}`, tokens[inner_index+1].value)
+                  inner_index++
+                //check for identation: should be at least 2 more than repetir identation founded
+                } while (repetir_ident_level*2 === tokens[inner_index+1].ident_level)
+              }
+              index += inner_index - index - 2
+            }
+            index++
+          } else
           //look for normal instructions (e.g: mover, derecha)
-          // console.log(tokens[index], tokens[index+1])
+          if (tokens[index+1] && tokens[index+1].type === "keyword"){
+            console.log(tokens[index+1].value)
+          }
         } while (tokens[index+1].type !== "section" && tokens[index+1].value !== "fin")
       }
       index++ //DEBUG
